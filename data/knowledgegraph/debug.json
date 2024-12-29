@@ -1,0 +1,53 @@
+[
+    {
+        "question": "what are the common symptoms of fip and some disease caused by old age?",
+        "qid": "246000102_graphquestions",
+        "source": "graphquestions",
+        "entities": {
+            "fip": "m.06_1k9",
+            "Old age": "m.01hbgs"
+        },
+        "s_expression": "(AND base.pethealth.symptom (AND (JOIN (R base.pethealth.pet_disease_or_medical_condition.symptoms) m.06_1k9) (JOIN (R base.pethealth.pet_disease_or_medical_condition.symptoms) (JOIN (R base.pethealth.pet_disease_risk_factor.pet_diseases_with_this_risk_factor) m.01hbgs))))",
+        "actions": [
+            "get_relations(m.06_1k9)",
+            "get_neighbors(m.06_1k9,base.pethealth.pet_disease_or_medical_condition.symptoms)",
+            "get_relations(m.01hbgs)",
+            "get_neighbors(m.01hbgs,base.pethealth.pet_disease_risk_factor.pet_diseases_with_this_risk_factor)",
+            "get_relations(#1)",
+            "get_neighbors(#1,base.pethealth.pet_disease_or_medical_condition.symptoms)",
+            "intersection(#0,#2)"
+        ],
+        "answer": [
+            {
+                "answer_type": "Entity",
+                "answer_argument": "m.023s6n",
+                "entity_name": "Weight loss"
+            },
+            {
+                "answer_type": "Entity",
+                "answer_argument": "m.0brgy",
+                "entity_name": "Anorexia"
+            },
+            {
+                "answer_type": "Entity",
+                "answer_argument": "m.0f3kl",
+                "entity_name": "Diarrhea"
+            },
+            {
+                "answer_type": "Entity",
+                "answer_argument": "m.0cjf0",
+                "entity_name": "Fever"
+            },
+            {
+                "answer_type": "Entity",
+                "answer_argument": "m.01j6t0",
+                "entity_name": "Fatigue"
+            },
+            {
+                "answer_type": "Entity",
+                "answer_argument": "m.0lcdk",
+                "entity_name": "Anemia"
+            }
+        ]
+    }
+]
