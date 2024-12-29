@@ -49,6 +49,8 @@ python eval.py \
 ```
 This command can be used to evaluate on dev.yaml of our KG experiments using gpt-3.5-turbo, running with 10 threads in parallel.
 
+For agent config files, please remember to replace placeholders with your actual API keys.
+
 
 
 ## Citation
