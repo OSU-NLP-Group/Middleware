@@ -1,0 +1,251 @@
+# fuxi-3.5 correct, 3.5 wrong  (27)
+--------------------------------------------------
+output1: SELECT schools.Phone FROM frpm JOIN schools ON frpm.CDSCode = schools.CDSCode WHERE frpm.`Charter Funding Type` = 'Directly funded' AND schools.OpenDate > '2000-01-01'
+output2: SELECT Phone FROM schools WHERE Charter = 1 AND OpenDate > '2000-01-01'
+--------------------------------------------------
+output1: SELECT AVG(NumTstTakr) FROM satscores JOIN schools ON satscores.cds = schools.CDSCode WHERE schools.County = 'Fresno' AND schools.OpenDate >= '1980-01-01' AND schools.OpenDate <= '1980-12-31'
+output2: SELECT AVG(NumTstTakr) FROM satscores WHERE cds IN (SELECT CDSCode FROM schools WHERE City = 'Fresno' AND OpenDate BETWEEN '1/1/1980' AND '12/31/1980')
+--------------------------------------------------
+output1: SELECT schools.Phone, schools.Ext, frpm.`School Name` FROM frpm JOIN schools ON frpm.CDSCode = schools.CDSCode WHERE schools.Zip = '95203-3704'
+output2: SELECT schools."School", schools."Phone", schools."Ext" FROM schools WHERE schools."Zip" = '95203-3704'
+--------------------------------------------------
+output1: SELECT COUNT(*) FROM frpm JOIN schools ON frpm.CDSCode = schools.CDSCode WHERE schools.City = 'Hickman' AND schools.Charter = 1 AND frpm.`District Type` = 'Elementary School District'
+output2: SELECT COUNT(*) FROM schools WHERE City = 'Hickman' AND Charter = 1 AND District = 'Elementary School District'
+--------------------------------------------------
+output1: SELECT COUNT(*) FROM schools WHERE MailCity = 'Hickman' AND CharterNum = '00D4'
+output2: SELECT COUNT(*) FROM schools WHERE MailCity = 'Handford' AND CharterNum = '00D4'
+--------------------------------------------------
+output1: SELECT frpm.`District Code` FROM frpm JOIN schools ON frpm.CDSCode = schools.CDSCode WHERE schools.City = 'Fresno' AND schools.Magnet = 0
+output2: SELECT `District Code` FROM frpm WHERE `School Code` IN (SELECT CDSCode FROM schools WHERE City = 'Fresno' AND Magnet = 0)
+--------------------------------------------------
+output1: SELECT disp.disp_id FROM trans JOIN disp ON trans.account_id = disp.account_id WHERE trans.amount = 5100 AND trans.date = '1998-09-02'
+output2: SELECT disp_id FROM disp WHERE account_id = (SELECT account_id FROM trans WHERE date = '1998-09-02' AND amount = 5100)
+--------------------------------------------------
+output1: SELECT district.A2 FROM client JOIN disp ON client.client_id = disp.client_id JOIN account ON disp.account_id = account.account_id JOIN district ON client.district_id = district.district_id WHERE client.gender = 'F' AND client.birth_date = '1976-01-29'
+output2: SELECT card.type FROM card WHERE card.disp_id = (SELECT disp.disp_id FROM disp WHERE disp.client_id = (SELECT client.client_id FROM client WHERE client.gender = 'F' AND client.birth_date = '1976-01-29'))
+--------------------------------------------------
+output1: SELECT account.account_id, account.date FROM account JOIN district ON account.district_id = district.district_id WHERE district.A2 = 'Prachatice'
+output2: SELECT account_id, date FROM account WHERE district_id = (SELECT district_id FROM district WHERE A4 = 'Prachatice')
+--------------------------------------------------
+output1: SELECT COUNT(*) FROM disp JOIN card ON disp.disp_id = card.disp_id WHERE disp.`type` = 'DISPONENT' AND card.`type` = 'credit'
+output2: SELECT COUNT(*) FROM card WHERE type = 'gold' OR type = 'classic' AND card_id IN (SELECT card_id FROM disp WHERE type = 'disponent')
+--------------------------------------------------
+output1: SELECT COUNT(*) FROM client JOIN district ON client.district_id = district.district_id WHERE client.gender = 'F' AND district.A3 LIKE '%south Bohemia%'
+output2: SELECT COUNT(*) FROM account WHERE district_id = (SELECT district_id FROM district WHERE A2 = 'South Bohemia') AND account_id IN (SELECT account_id FROM disp WHERE client_id IN (SELECT client_id FROM client WHERE gender = 'F' AND district_id = (SELECT district_id FROM district WHERE A2 = 'South Bohemia')))
+--------------------------------------------------
+output1: SELECT account_id FROM account JOIN district ON account.district_id = district.district_id WHERE district.A2 = 'Tabor'
+output2: SELECT * FROM loan WHERE account_id IN (SELECT account_id FROM account WHERE district_id = (SELECT district_id FROM district WHERE A2 = 'Tabor'))
+--------------------------------------------------
+output1: SELECT strftime('%Y', client.birth_date) FROM client JOIN disp ON client.client_id = disp.client_id WHERE disp.account_id = 130
+output2: SELECT birth_date FROM client WHERE client_id = (SELECT client_id FROM disp WHERE disp_id = (SELECT disp_id FROM card WHERE card_id = (SELECT card_id FROM trans WHERE account_id = (SELECT account_id FROM account WHERE account_id = 130))))
+--------------------------------------------------
+output1: SELECT COUNT(*) FROM account JOIN disp ON account.account_id = disp.account_id JOIN client ON disp.client_id = client.client_id WHERE account.frequency = 'POPLATEK TYDNE' AND client.gender = 'User'
+output2: SELECT COUNT(*) FROM client WHERE client_id IN (SELECT client_id FROM disp WHERE account_id IN (SELECT account_id FROM account WHERE frequency = 'POPLATEK TYDNE') AND type = 'OWNER') AND gender = 'F'
+--------------------------------------------------
+output1: SELECT COUNT(*) FROM client JOIN district ON client.district_id = district.district_id WHERE birth_date >= '1920-01-01' AND birth_date <= '1920-12-31' AND A3 = 'east Bohemia'
+output2: SELECT COUNT(*) FROM client WHERE birth_date LIKE '1920%' AND district_id IN (SELECT district_id FROM district WHERE A2 = 'east Bohemia')
+--------------------------------------------------
+output1: SELECT COUNT(*) FROM loan JOIN account ON loan.account_id = account.account_id WHERE loan.duration = 24 AND account.frequency = 'POPLATEK TYDNE'
+output2: SELECT COUNT(*) FROM loan l JOIN account a ON l.account_id = a.account_id WHERE l.duration = 24 AND a.frequency = 'W' AND l.status = 'A'
+--------------------------------------------------
+output1: SELECT DISTINCT molecule.label FROM atom JOIN molecule ON atom.molecule_id = molecule.molecule_id JOIN connected ON atom.atom_id = connected.atom_id WHERE atom.element != 'tin'
+output2: SELECT DISTINCT label FROM molecule JOIN atom ON molecule.molecule_id = atom.molecule_id JOIN connected ON atom.atom_id = connected.atom_id OR atom.atom_id = connected.atom_id2 JOIN bond ON connected.bond_id = bond.bond_id WHERE element = 'tin' EXCEPT SELECT DISTINCT label FROM molecule JOIN atom ON molecule.molecule_id = atom.molecule_id JOIN connected ON atom.atom_id = connected.atom_id OR atom.atom_id = connected.atom_id2 JOIN bond ON connected.bond_id = bond.bond_id WHERE element = 'tin' AND label IS NOT NULL
+--------------------------------------------------
+output1: SELECT COUNT(DISTINCT molecule_id) * 100 / (SELECT COUNT(DISTINCT molecule_id) FROM molecule) AS percentage FROM molecule WHERE molecule_id IN (   SELECT molecule_id   FROM atom   WHERE element != 'Fluorine' )
+output2: SELECT COUNT(DISTINCT molecule_id) * 1.0 / COUNT(DISTINCT molecule_id) * 1.0 FROM molecule WHERE molecule_id IN (SELECT molecule_id FROM atom WHERE element = 'C') AND molecule_id NOT IN (SELECT molecule_id FROM atom WHERE element = 'F')
+--------------------------------------------------
+output1:  SELECT element FROM atom JOIN molecule ON atom.molecule_id = molecule.molecule_id WHERE molecule.molecule_id = 'TR000' GROUP BY element ORDER BY element ASC LIMIT 3
+output2: SELECT DISTINCT element FROM atom WHERE molecule_id = (SELECT molecule_id FROM molecule WHERE label = 'TR000')
+--------------------------------------------------
+output1: SELECT atom.element, molecule.label FROM atom JOIN molecule ON atom.molecule_id = molecule.molecule_id WHERE molecule.molecule_id = 'TR060'
+output2: SELECT atom.element, molecule.label FROM atom JOIN molecule ON atom.molecule_id = molecule.molecule_id WHERE atom.molecule_id = (SELECT molecule_id FROM molecule WHERE label = 'TR060')
+--------------------------------------------------
+output1: SELECT element FROM atom WHERE molecule_id = 'TR004'
+output2: SELECT DISTINCT element FROM atom WHERE molecule_id = (SELECT molecule_id FROM molecule WHERE label = 'TR004')
+--------------------------------------------------
+output1: SELECT AVG(bond_count) FROM (SELECT COUNT(connected.bond_id) AS bond_count FROM atom JOIN connected ON atom.atom_id = connected.atom_id WHERE atom.element = 'i' GROUP BY atom.atom_id) AS subquery
+output2: SELECT AVG(bond_num) FROM (SELECT COUNT(*) AS bond_num FROM bond WHERE bond_id IN (SELECT bond_id FROM connected WHERE atom_id IN (SELECT atom_id FROM atom WHERE element = 'iodine')) GROUP BY bond_id)
+--------------------------------------------------
+output1: SELECT DISTINCT atom.element FROM bond JOIN connected ON bond.bond_id = connected.bond_id JOIN atom ON connected.atom_id = atom.atom_id WHERE bond.bond_id = 'TR001_10_11'
+output2: SELECT element FROM atom WHERE atom_id IN (SELECT atom_id FROM connected WHERE bond_id = 'TR001_10')
+--------------------------------------------------
+output1: SELECT DISTINCT atom.element FROM atom JOIN molecule ON atom.molecule_id = molecule.molecule_id JOIN connected ON atom.atom_id = connected.atom_id WHERE molecule.molecule_id = 'TR001'
+output2: SELECT DISTINCT element FROM atom WHERE molecule_id = (SELECT molecule_id FROM molecule WHERE label = 'TR001')
+--------------------------------------------------
+output1: SELECT label FROM molecule WHERE molecule_id = 'TR151'
+output2: SELECT CASE WHEN label = 'carcinogenic' THEN 'Yes' ELSE 'No' END FROM molecule WHERE molecule_id = 'TR151'
+--------------------------------------------------
+output1: SELECT atom.element FROM atom JOIN molecule ON atom.molecule_id = molecule.molecule_id WHERE molecule.molecule_id = 'TR151'
+output2: SELECT element FROM atom WHERE molecule_id = (SELECT molecule_id FROM molecule WHERE label = 'TR151') LIMIT 1
+--------------------------------------------------
+output1: SELECT label FROM molecule WHERE molecule_id = 'TR124'
+output2: 
+
+# 3.5 correct, fuxi-3.5 wrong  (12)
+--------------------------------------------------
+output1: SELECT AVG(AvgScrWrite), schools.City FROM satscores JOIN schools ON satscores.cds = schools.CDSCode WHERE satscores.NumGE1500 > 0 AND satscores.NumTstTakr = (SELECT MAX(NumTstTakr) FROM satscores WHERE NumGE1500 > 0) GROUP BY schools.City
+output2: SELECT AVG(AvgScrWrite), schools.City FROM satscores JOIN schools ON satscores.cds = schools.CDSCode GROUP BY schools.City HAVING NumTstTakr = MAX(NumTstTakr) AND (AvgScrRead + AvgScrMath + AvgScrWrite) >= 1500
+--------------------------------------------------
+output1: SELECT CASE WHEN AVG(CASE WHEN A2 = 95 THEN A12/A11 ELSE 0 END) > AVG(CASE WHEN A2 = 96 THEN A12/A11 ELSE 0 END) THEN '1995' ELSE '1996' END FROM district
+output2: SELECT AVG(A12) AS avg_unemployment_ratio FROM district WHERE A11 >= 1995 AND A11 <= 1996
+--------------------------------------------------
+output1: SELECT trans.amount FROM trans WHERE trans.account_id = (SELECT loan.account_id FROM loan WHERE loan.amount = (SELECT MAX(loan.amount) FROM loan)) ORDER BY trans.date ASC LIMIT 1
+output2: SELECT trans.amount  FROM loan  JOIN client ON loan.account_id = client.client_id  JOIN disp ON disp.account_id = loan.account_id  JOIN trans ON trans.account_id = disp.disp_id  JOIN account ON account.account_id = disp.account_id  WHERE loan.amount = (SELECT MAX(amount) FROM loan)  AND trans.date > account.date  ORDER BY trans.date ASC  LIMIT 1
+--------------------------------------------------
+output1: SELECT AVG(amount) FROM trans WHERE type = 'credit card' AND strftime('%Y', date) = '2021'
+output2: SELECT AVG(trans.amount) FROM trans JOIN card ON trans.account_id = card.disp_id WHERE trans.date >= '1995-03-24' AND trans.date <= '1995-12-31' AND card.type = 'gold'
+--------------------------------------------------
+output1: SELECT COUNT(*) FROM loan WHERE account_id IN (SELECT account_id FROM disp WHERE type = 'classic')
+output2: SELECT COUNT(*) FROM card WHERE type = 'classic' AND card_id IN (SELECT card_id FROM disp)
+--------------------------------------------------
+output1: SELECT COUNT(*) FROM client WHERE district_id = (SELECT district_id FROM district WHERE A2 = 'Hl.m. Praha') AND gender = 'M'
+output2: SELECT COUNT(*) FROM client JOIN district ON client.district_id = district.district_id WHERE district.A2 LIKE '%Hl.m. Praha%' AND client.gender = 'male'
+--------------------------------------------------
+output1: SELECT client.client_id FROM client JOIN disp ON client.client_id = disp.client_id JOIN loan ON loan.account_id = disp.account_id WHERE loan.amount = (SELECT MAX(amount) FROM loan)
+output2: SELECT client.client_id, client.gender, client.birth_date, client.district_id FROM loan JOIN account ON loan.account_id = account.account_id JOIN disp ON account.account_id = disp.account_id JOIN client ON disp.client_id = client.client_id ORDER BY loan.amount DESC LIMIT 1
+--------------------------------------------------
+output1: SELECT type FROM card WHERE disp_id = (SELECT disp_id FROM disp WHERE client_id = 9)
+output2: SELECT disp.type FROM client JOIN disp ON client.client_id = disp.client_id WHERE client.client_id = 9
+--------------------------------------------------
+output1: SELECT COUNT(*) FROM client WHERE gender = 'F' AND client_id IN (SELECT client_id FROM disp WHERE disp_id IN (SELECT disp_id FROM card WHERE type = 'junior'))
+output2: SELECT COUNT(*) FROM client JOIN disp ON client.client_id = disp.client_id WHERE client.gender = 'F' AND disp.type = 'OWNER'
+--------------------------------------------------
+output1: SELECT bond_type FROM bond GROUP BY bond_type ORDER BY COUNT(*) DESC LIMIT 1
+output2: SELECT bond_type, COUNT(*) AS count FROM bond GROUP BY bond_type ORDER BY count DESC LIMIT 1
+--------------------------------------------------
+output1: SELECT DISTINCT element FROM atom WHERE atom_id IN (SELECT atom_id FROM connected WHERE bond_id = 'TR005_16_26' OR bond_id = 'TR005_16_26')
+output2: SELECT DISTINCT atom.element  FROM atom  JOIN bond ON atom.molecule_id = bond.molecule_id  JOIN connected ON (atom.atom_id = connected.atom_id OR atom.atom_id = connected.atom_id2)  JOIN molecule ON atom.molecule_id = molecule.molecule_id  WHERE bond.bond_id = 'TR005_16_26'
+--------------------------------------------------
+output1: SELECT DISTINCT element FROM atom WHERE atom_id IN (SELECT atom_id FROM connected WHERE bond_id = 'TR001_10_11' UNION SELECT atom_id2 FROM connected WHERE bond_id = 'TR001_10_11')
+output2: SELECT DISTINCT atom.element FROM atom JOIN bond ON atom.molecule_id = bond.molecule_id JOIN connected ON atom.atom_id = connected.atom_id JOIN molecule ON atom.molecule_id = molecule.molecule_id WHERE bond.bond_id = 'TR001_10_11'
+
+# 3.5+kg correct, fuxi-3.5 wrong   (43)
+--------------------------------------------------
+output1: SELECT frpm.CDSCode FROM frpm WHERE (frpm.`Enrollment (K-12)` + frpm.`Enrollment (Ages 5-17)`) > 500
+output2: SELECT CDSCode, SUM(`Enrollment (K-12)`) AS TotalEnrollment FROM frpm WHERE `Enrollment (K-12)` > 500
+--------------------------------------------------
+output1: SELECT s.Street, s.City, s.Zip, s.State FROM schools s JOIN satscores ss ON s.CDSCode = ss.cds WHERE ss.NumTstTakr > 0 ORDER BY ss.NumGE1500/ss.NumTstTakr ASC LIMIT 1
+output2: SELECT schools.Street, schools.City, schools.Zip, schools.State FROM frpm JOIN schools ON frpm.CDSCode = schools.CDSCode ORDER BY frpm.`Percent (%) Eligible FRPM (Ages 5-17)` ASC LIMIT 1
+--------------------------------------------------
+output1: SELECT s.Website FROM schools s JOIN satscores ss ON s.CDSCode = ss.cds WHERE s.County = 'Los Angeles'  AND ss.NumTstTakr BETWEEN 2000 AND 3000
+output2: SELECT schools.Website FROM frpm JOIN satscores ON frpm.CDSCode = satscores.cds JOIN schools ON frpm.CDSCode = schools.CDSCode WHERE frpm.`County Name` = 'Los Angeles' AND satscores.NumTstTakr BETWEEN 2000 AND 3000
+--------------------------------------------------
+output1: SELECT satscores.AvgScrWrite, schools.City FROM satscores JOIN schools ON satscores.cds = schools.CDSCode WHERE satscores.NumTstTakr = (     SELECT MAX(NumTstTakr)     FROM satscores     WHERE NumGE1500 >= 1500 ) AND NumGE1500 >= 1500 GROUP BY satscores.cds ORDER BY satscores.AvgScrWrite DESC LIMIT 1
+output2: SELECT AVG(AvgScrWrite), schools.City FROM satscores JOIN schools ON satscores.cds = schools.CDSCode GROUP BY schools.City HAVING NumTstTakr = MAX(NumTstTakr) AND (AvgScrRead + AvgScrMath + AvgScrWrite) >= 1500
+--------------------------------------------------
+output1: SELECT COUNT(*)  FROM schools  JOIN satscores ON schools.CDSCode = satscores.cds  WHERE schools.MailCity = 'Lakeport' AND (satscores.AvgScrRead + satscores.AvgScrMath + satscores.AvgScrWrite) >= 1500
+output2: SELECT COUNT(*) FROM satscores JOIN schools ON satscores.cds = schools.CDSCode WHERE NumGE1500 >= 1500 AND MailCity = 'Lakeport'
+--------------------------------------------------
+output1: SELECT satscores.NumTstTakr FROM satscores JOIN schools ON satscores.cds = schools.CDSCode WHERE schools.MailCity = 'Fresno'
+output2: SELECT SUM(NumTstTakr) FROM satscores JOIN schools ON satscores.cds = schools.CDSCode WHERE schools.City = 'Fresno'
+--------------------------------------------------
+output1: SELECT s.Phone, s.Ext FROM satscores ss JOIN schools s ON ss.cds = s.CDSCode WHERE ss.AvgScrWrite IS NOT NULL ORDER BY ss.AvgScrWrite DESC LIMIT 1 OFFSET 332
+output2: SELECT schools.Phone, schools.Ext FROM satscores JOIN schools ON satscores.cds = schools.CDSCode ORDER BY satscores.AvgScrWrite DESC LIMIT 333, 1
+--------------------------------------------------
+output1: SELECT s.Website FROM schools s WHERE s.Virtual = 'P' AND s.Charter = 1 AND s.County = 'San Joaquin'
+output2: SELECT Website FROM frpm JOIN satscores ON frpm.CDSCode = satscores.cds JOIN schools ON frpm.CDSCode = schools.CDSCode WHERE Virtual = 'P' AND County = 'San Joaquin'
+--------------------------------------------------
+output1: SELECT COUNT(*)  FROM schools  WHERE County = 'Los Angeles'  AND Charter = 0  AND CDSCode IN (     SELECT CDSCode      FROM frpm      WHERE `Enrollment (K-12)` > 0      AND `Free Meal Count (K-12)` / `Enrollment (K-12)` < 0.0018 )
+output2: SELECT COUNT(*) FROM frpm JOIN schools ON frpm.CDSCode = schools.CDSCode WHERE `Charter School (Y/N)` = 0 AND `Percent (%) Eligible Free (K-12)` < 0.18
+--------------------------------------------------
+output1: SELECT COUNT(DISTINCT client.client_id) FROM client JOIN disp ON client.client_id = disp.client_id JOIN account ON disp.account_id = account.account_id JOIN district ON client.district_id = district.district_id WHERE client.gender = 'M' AND district.A3 = 'North Bohemia' AND district.A11 > 8000 AND account.frequency = 'POPLATEK MESICNE'
+output2: SELECT COUNT(*) FROM (SELECT client.client_id, AVG(trans.amount) AS average_salary FROM client JOIN disp ON client.client_id = disp.client_id JOIN account ON disp.account_id = account.account_id JOIN district ON client.district_id = district.district_id JOIN trans ON account.account_id = trans.account_id WHERE client.gender = 'M' AND district.A3 LIKE '%Bohemia' GROUP BY client.client_id) AS subquery WHERE average_salary > 8000
+--------------------------------------------------
+output1: SELECT COUNT(*)  FROM client  JOIN district ON client.district_id = district.district_id  WHERE district.A2 = 'Jesenik' AND (client.gender = 'F' OR client.gender = 'female')
+output2: SELECT COUNT(*) FROM client JOIN district ON client.district_id = district.district_id WHERE district.A4 = 'Jesenik' AND client.gender = 'woman'
+--------------------------------------------------
+output1: SELECT COUNT(CASE WHEN c.gender = 'M' THEN 1 END) * 100.0 / COUNT(c.client_id) FROM client c JOIN district d ON c.district_id = d.district_id WHERE d.A3 = 'south Bohemia' AND d.A4 = (SELECT MAX(A4) FROM district WHERE A3 = 'south Bohemia')
+output2:   SELECT      (COUNT(c.client_id) * 100.0) / (SELECT COUNT(*) FROM client c INNER JOIN district d ON c.district_id = d.district_id WHERE d.A7 = 'south Bohemia') AS percentage FROM      client c INNER JOIN      district d ON c.district_id = d.district_id WHERE      c.gender = 'M' AND d.A7 = 'south Bohemia'
+--------------------------------------------------
+output1: SELECT ((COUNT(*) FILTER (WHERE status = 'C') * 1.0) / COUNT(*)) * 100 AS percentage_running FROM loan WHERE amount < 100000
+output2:   SELECT COUNT(*) * 100.0 / (SELECT COUNT(*) FROM loan WHERE amount < 100000)  FROM loan  WHERE amount < 100000 AND status = 'running'
+--------------------------------------------------
+output1: SELECT district.A2, district.A3 FROM loan JOIN account ON loan.account_id = account.account_id JOIN district ON account.district_id = district.district_id WHERE loan.loan_id = 4990
+output2: SELECT district.A4, district.A5 FROM loan JOIN account ON loan.account_id = account.account_id JOIN district ON account.district_id = district.district_id WHERE loan.loan_id = 4990
+--------------------------------------------------
+output1: SELECT account.account_id, district.A2, district.A3 FROM account JOIN loan ON account.account_id = loan.account_id JOIN district ON account.district_id = district.district_id WHERE loan.amount > 300000
+output2: SELECT account.account_id, district.A4, district.A5 FROM loan JOIN account ON loan.account_id = account.account_id JOIN district ON account.district_id = district.district_id WHERE loan.amount > 300000
+--------------------------------------------------
+output1: SELECT COUNT(*) * 100.0 / (SELECT COUNT(*) FROM account WHERE date LIKE '1993%') AS percentage FROM account WHERE district_id IN (SELECT district_id FROM district WHERE A2 = 'Decin') AND date LIKE '1993%'
+output2: SELECT COUNT(*) * 100.0 / (SELECT COUNT(*) FROM account WHERE date >= '1993-01-01' AND date <= '1993-12-31') FROM account a JOIN district d ON a.district_id = d.district_id WHERE d.A3 = 'Decin' AND a.date >= '1993-01-01' AND a.date <= '1993-12-31'
+--------------------------------------------------
+output1: SELECT COUNT(DISTINCT account_id)  FROM account  WHERE district_id = (     SELECT district_id      FROM district      ORDER BY A16 DESC      LIMIT 1 )
+output2: SELECT COUNT(DISTINCT trans.account_id) FROM district JOIN trans ON district.district_id = trans.account_id WHERE date >= '1996-01-01' AND date <= '1996-12-31' GROUP BY district.district_id
+--------------------------------------------------
+output1: SELECT COUNT(*)  FROM account  WHERE district_id = (SELECT district_id FROM district WHERE A2 = 'Pisek')
+output2: SELECT COUNT(*) FROM account WHERE district_id = (SELECT district_id FROM district WHERE A4 = 'Pisek')
+--------------------------------------------------
+output1: SELECT AVG(amount)  FROM trans  WHERE operation = 'VYBER KARTOU'  AND strftime('%Y', date) = '2021'
+output2: SELECT AVG(trans.amount) FROM trans JOIN card ON trans.account_id = card.disp_id WHERE trans.date >= '1995-03-24' AND trans.date <= '1995-12-31' AND card.type = 'gold'
+--------------------------------------------------
+output1: SELECT COUNT(*)  FROM client  WHERE gender = 'M'  AND district_id = (SELECT district_id FROM district WHERE A2 = 'Hl.m. Praha')
+output2: SELECT COUNT(*) FROM client JOIN district ON client.district_id = district.district_id WHERE district.A2 LIKE '%Hl.m. Praha%' AND client.gender = 'male'
+--------------------------------------------------
+output1: SELECT A15 FROM district WHERE district_id = (SELECT district_id FROM account WHERE account_id = 532)
+output2: SELECT COUNT(*) FROM account JOIN district ON account.district_id = district.district_id WHERE account.account_id = 532 AND strftime('%Y', account.date) = '1995'
+--------------------------------------------------
+output1: SELECT client.client_id FROM client JOIN disp ON client.client_id = disp.client_id JOIN card ON disp.disp_id = card.disp_id WHERE card.type = 'junior' AND card.issued >= '1997-01-01'
+output2: SELECT client.client_id FROM client JOIN card ON client.client_id = card.disp_id WHERE card.type = 'junior' AND card.issued > '1996-01-01'
+--------------------------------------------------
+output1: SELECT COUNT(*) * 100.0 / (SELECT COUNT(*) FROM client c JOIN district d ON c.district_id = d.district_id WHERE d.A11 > 10000) AS percentage FROM client c  JOIN district d ON c.district_id = d.district_id  WHERE d.A11 > 10000 AND c.gender = 'F'
+output2:   SELECT      COUNT(*) * 100.0 / (SELECT COUNT(*) FROM client c JOIN district d ON c.district_id = d.district_id WHERE d.A10 > 10000) AS percentage FROM      client c JOIN      district d ON c.district_id = d.district_id WHERE      c.gender = 'F' AND d.A10 > 10000
+--------------------------------------------------
+output1: SELECT COUNT(DISTINCT account.account_id) FROM account JOIN disp ON account.account_id = disp.account_id WHERE disp.type = 'OWNER' AND account.frequency = 'POPLATEK PO OBRATU'
+output2: SELECT COUNT(*) FROM disp JOIN trans ON disp.disp_id = trans.account_id WHERE disp.type = 'OWNER' AND trans.k_symbol = 'SIPO'
+--------------------------------------------------
+output1: SELECT COUNT(DISTINCT client.client_id) FROM client JOIN disp ON client.client_id = disp.client_id JOIN card ON disp.disp_id = card.disp_id WHERE client.gender = 'F' AND card.type = 'junior'
+output2: SELECT COUNT(*) FROM client JOIN disp ON client.client_id = disp.client_id WHERE client.gender = 'F' AND disp.type = 'OWNER'
+--------------------------------------------------
+output1: SELECT COUNT(CASE WHEN c.gender = 'M' THEN 1 END) * 100.0 / COUNT(*) AS percentage FROM account a JOIN client c ON a.district_id = c.district_id WHERE a.frequency = 'POPLATEK TYDNE'
+output2: SELECT COUNT(*) * 100.0 / (SELECT COUNT(*) FROM client WHERE gender = 'M')  FROM account  INNER JOIN disp ON account.account_id = disp.account_id  INNER JOIN client ON disp.client_id = client.client_id  WHERE account.frequency = 'WEEKLY' AND client.gender = 'M'
+--------------------------------------------------
+output1: SELECT COUNT(DISTINCT atom.molecule_id) FROM atom JOIN molecule ON atom.molecule_id = molecule.molecule_id WHERE molecule.label = '-' AND atom.element = 'cl'
+output2: SELECT COUNT(DISTINCT atom.molecule_id) FROM atom JOIN molecule ON atom.molecule_id = molecule.molecule_id JOIN connected ON atom.atom_id = connected.atom_id WHERE atom.element = 'cl'
+--------------------------------------------------
+output1: SELECT COUNT(*) FROM atom WHERE element != 'br'
+output2: SELECT COUNT(*) FROM atom WHERE element <> 'bromine'
+--------------------------------------------------
+output1: SELECT COUNT(*)  FROM molecule  WHERE molecule_id BETWEEN 'TR000' AND 'TR099' AND label = '+'
+output2: SELECT COUNT(*) FROM molecule WHERE label = '+' LIMIT 100
+--------------------------------------------------
+output1: SELECT a1.atom_id, a2.atom_id FROM connected c JOIN atom a1 ON c.atom_id = a1.atom_id JOIN atom a2 ON c.atom_id2 = a2.atom_id JOIN bond b ON c.bond_id = b.bond_id WHERE b.bond_type = '-'
+output2: SELECT connected.atom_id, connected.atom_id2 FROM connected JOIN bond ON connected.bond_id = bond.bond_id WHERE bond.bond_type IS NOT NULL
+--------------------------------------------------
+output1: SELECT (SUM(CASE WHEN label = '+' THEN 1 ELSE 0 END) - SUM(CASE WHEN label = '-' THEN 1 ELSE 0 END)) AS difference FROM molecule
+output2: SELECT COUNT(*) FROM molecule JOIN atom ON molecule.molecule_id = atom.molecule_id WHERE molecule.label = '-'
+--------------------------------------------------
+output1: SELECT `bond_type`, `atom_id`, `atom_id2`  FROM `bond`  JOIN `connected` ON `bond`.`bond_id` = `connected`.`bond_id`  WHERE `bond`.`bond_id` = 'TR001_6_9'
+output2: SELECT bond.bond_type, atom.atom_id FROM bond JOIN connected ON bond.bond_id = connected.bond_id JOIN atom ON connected.atom_id = atom.atom_id WHERE bond.bond_id = 'TR001_6_9'
+--------------------------------------------------
+output1: SELECT COUNT(*)  FROM molecule  WHERE label = '-'
+output2: SELECT COUNT(*) FROM molecule WHERE label != 'carcinogenic'
+--------------------------------------------------
+output1: SELECT DISTINCT molecule.molecule_id FROM atom JOIN molecule ON atom.molecule_id = molecule.molecule_id WHERE SUBSTR(atom.atom_id, 7, 2) BETWEEN '21' AND '25' AND molecule.label = '+'
+output2: SELECT DISTINCT molecule.molecule_id FROM atom JOIN molecule ON atom.molecule_id = molecule.molecule_id WHERE atom.atom_id >= 21
+--------------------------------------------------
+output1: SELECT element FROM atom WHERE atom_id IN (   SELECT atom_id   FROM connected   WHERE bond_id = 'TR144_8_19' )
+output2: SELECT atom.element FROM atom JOIN molecule ON atom.molecule_id = molecule.molecule_id WHERE molecule.label = 'TR144_8_19'
+--------------------------------------------------
+output1: SELECT COUNT(*)  FROM atom  WHERE element IN ('c', 'h')
+output2: SELECT COUNT(*) FROM atom JOIN molecule ON atom.molecule_id = molecule.molecule_id WHERE atom.element = 'c' OR atom.element = 'h'
+--------------------------------------------------
+output1: SELECT connected.atom_id2 FROM atom JOIN connected ON atom.atom_id = connected.atom_id WHERE atom.element = 's'
+output2: SELECT connected.atom_id2 FROM atom JOIN connected ON atom.atom_id = connected.atom_id WHERE atom.element LIKE '%sulfur%'
+--------------------------------------------------
+output1: SELECT molecule_id  FROM molecule  WHERE label = '-'
+output2: SELECT molecule_id FROM molecule WHERE label != 'carcinogenic'
+--------------------------------------------------
+output1: SELECT COUNT(DISTINCT molecule.molecule_id) AS total_carcinogenic_molecules FROM molecule WHERE molecule.label = '+' AND molecule.molecule_id BETWEEN 'TR000' AND 'TR030'
+output2: SELECT COUNT(DISTINCT molecule.molecule_id) FROM connected JOIN bond ON connected.bond_id = bond.bond_id JOIN atom ON connected.atom_id = atom.atom_id JOIN molecule ON bond.molecule_id = molecule.molecule_id WHERE molecule.molecule_id >= 'TR000' AND molecule.molecule_id <= 'TR030' AND (atom.element LIKE '%c%' OR atom.element LIKE '%p%')
+--------------------------------------------------
+output1: SELECT molecule.label FROM molecule JOIN atom ON molecule.molecule_id = atom.molecule_id WHERE atom.element = 'ca' GROUP BY molecule.label ORDER BY COUNT(*) DESC LIMIT 1
+output2: SELECT COUNT(*) FROM atom JOIN molecule ON atom.molecule_id = molecule.molecule_id WHERE atom.element = 'Calcium'
+--------------------------------------------------
+output1: SELECT molecule.label FROM molecule JOIN atom ON molecule.molecule_id = atom.molecule_id WHERE atom.atom_id = 'TR001_1' AND molecule.label = '+'
+output2: SELECT molecule_id FROM atom WHERE atom_id = 'TR001_1' AND molecule_id IN (SELECT molecule_id FROM molecule WHERE label = 'carcinogenic')
+--------------------------------------------------
+output1: SELECT COUNT(DISTINCT molecule_id)  FROM molecule  WHERE label = '+'
+output2: SELECT molecule_id FROM molecule WHERE label = '+'
+--------------------------------------------------
+output1: SELECT COUNT(*)  FROM atom  WHERE molecule_id IN (SELECT molecule_id FROM molecule WHERE label = '+')
+output2: SELECT COUNT(*) FROM atom JOIN molecule ON atom.molecule_id = molecule.molecule_id JOIN connected ON atom.atom_id = connected.atom_id
