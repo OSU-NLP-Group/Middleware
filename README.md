@@ -35,11 +35,17 @@ For a more detailed description of the structure of the source code and config f
 
 To run experiments using our codebase, simply do
 ```
-python eval.py --task configs/tasks/<your_task>.yaml --agent configs/agents/<your_agent>.yaml --workers <num_of_threads>
+python eval.py \
+ --task configs/tasks/<your_task>.yaml \
+ --agent configs/agents/<your_agent>.yaml \
+ --workers <num_of_threads>
 ```
 For example,
 ```
-python eval.py --task configs/tasks/knowledgegraph/dev.yaml --agent configs/agents/api_agents/gpt-3.5-turbo.yaml --workers 10
+python eval.py \
+ --task configs/tasks/knowledgegraph/dev.yaml \
+ --agent configs/agents/api_agents/gpt-3.5-turbo.yaml \
+ --workers 10
 ```
 This command can be used to evaluate on dev.yaml of our KG experiments using gpt-3.5-turbo, running with 10 threads in parallel.
 
