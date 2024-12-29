@@ -9,6 +9,39 @@
 
 
 ## Setup
+```
+conda create -n middleware python=3.9
+conda activate middleware
+pip install -r requirements.txt
+```
+
+### Setup for KGs
+To run our experiments on Freebase, please follow [Freebase Setup](https://github.com/dki-lab/Freebase-Setup]) to set up a Virtuoso triplestore service. You can set up your Virtuoso server on port 3093. If you use a different port, please remember to correspondingly update the url [here](https://github.com/OSU-NLP-Group/Middleware/blob/990a6beb8d749932bb2891416fbd88f9a16e614b/src/tasks/knowledgegraph/utils/sparql_executer.py#L24).
+
+### Setup for DBs
+For our experiments on BIRD, please first download the databases associated with its dev set from the [official link](https://bird-bench.github.io) and put all files under `./data/birdbench/`.
+Note that, in the original dev set, no information regarding whether a task requires DB content to solve is provided. We have provided the information in our own `dev.json` file under `./data/birdbench/`. Specifically, whether a task requires content-level information to solve is indicated by the following json field:
+```json
+{
+    ...
+     "require_content_info": [true|false],
+    ...
+}
+```
+
+## Evaluation
+Our codebase is mostly adapted from the 0.1 version of [AgentBench](https://github.com/THUDM/AgentBench). 
+For a more detailed description of the structure of the source code and config files, please find more detailed information there (but this is not necessary if you just want to reproduce the experiments in our Middleware work).
+
+To run experiments using our codebase, simply do
+```
+python eval.py --task configs/tasks/<your_task>.yaml --agent configs/agents/<your_agent>.yaml --workers <num_of_threads>
+```
+For example,
+```
+python eval.py --task configs/tasks/knowledgegraph/dev.yaml --agent configs/agents/api_agents/gpt-3.5-turbo.yaml --workers 10
+```
+This command can be used to evaluate on dev.yaml of our KG experiments using gpt-3.5-turbo, running with 10 threads in parallel.
 
 
 
