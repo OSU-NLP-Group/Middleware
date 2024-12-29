@@ -1,0 +1,11 @@
+module: "src.agents.api_agents.OpenAIChatCompletion"
+parameters:
+    name: "togethercomputer/llama-2-7b-chat"
+    api_args:
+        model: "togethercomputer/llama-2-7b-chat"
+        key: <your_togetherai_key>
+        base: https://api.together.xyz
+        # base: <assign your openai base here>
+        timeout: 120
+        temperature: 0
+        max_tokens: 256

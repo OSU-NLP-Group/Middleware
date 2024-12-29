@@ -1,0 +1,10 @@
+module: "src.agents.api_agents.OpenAIChatCompletion"
+parameters:
+    name: "mistralai/Mistral-7B-Instruct-v0.2"
+    api_args:
+        model: "mistralai/Mistral-7B-Instruct-v0.2"
+        key: <your_togetherai_key>
+        base: https://api.together.xyz
+        timeout: 120
+        temperature: 0
+        max_tokens: 256

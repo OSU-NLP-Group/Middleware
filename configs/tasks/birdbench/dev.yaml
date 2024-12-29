@@ -1,0 +1,7 @@
+module: "src.tasks.BirdBench"
+parameters:
+    name: "BirdBench-dev"
+    round: 15
+    # data_file: "data/birdbench/ablation.json"
+    data_file: "data/birdbench/dev.json"
+    db_parent_path: "data/birdbench/dev_databases/"

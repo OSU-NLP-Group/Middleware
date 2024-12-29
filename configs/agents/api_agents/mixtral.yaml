@@ -1,0 +1,11 @@
+module: "src.agents.api_agents.OpenAIChatCompletion"
+parameters:
+    name: "mistralai/Mixtral-8x7B-Instruct-v0.1"
+    api_args:
+        model: "mistralai/Mixtral-8x7B-Instruct-v0.1"
+        key: <your_togetherai_key>
+        base: https://api.together.xyz
+        # base: <assign your openai base here>
+        timeout: 120
+        temperature: 0
+        max_tokens: 256

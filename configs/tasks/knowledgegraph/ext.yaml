@@ -1,0 +1,6 @@
+module: "src.tasks.KnowledgeGraph"
+parameters:
+    name: "KnowledgeGraph-ext"
+    round: 15
+    data_file: "data/knowledgegraph/ext.json"
+    sparql_url: "http://164.107.116.56:3093/sparql"
